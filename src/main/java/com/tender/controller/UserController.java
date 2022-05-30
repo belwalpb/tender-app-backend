@@ -9,10 +9,7 @@ import com.tender.model.LoginResponse;
 import com.tender.service.UserService;
 import com.tender.validator.RequestValidator;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
 import java.util.Objects;
@@ -33,21 +30,33 @@ public class UserController {
         return user;
     }
 
-    @PostMapping("/login-using-password")
+    @PostMapping("/login/password")
     public LoginResponse login(@RequestBody LoginRequest request) {
         return userService.loginUser(request);
     }
 
     // 1. OTP Send First Time.
-    public LoginOtpResponse loginUsingOtp(@RequestBody LoginOtpRequest otpRequest) {
+    @PostMapping("/login/send-otp")
+    public LoginOtpResponse sendLoginOtp(@RequestBody LoginOtpRequest otpRequest) {
         // Validations
         if(Objects.isNull(otpRequest.getUsername())) {
             throw new InvalidRequestException("Username Must be present");
         }
-        return null;
+        return userService.sendLoginOtp(otpRequest);
     }
-    //2. OTP Resend.
-    //3. OTP Verify & Token Generate
+
+    //2. OTP Verify & Token Generate
+    @PostMapping("/login/verify-otp")
+    public Object verifyLoginOtp(@RequestParam String otpID, @RequestParam String otp) {
+        return userService.verifyLoginOtp(otpID,otp);
+    }
+
+    //3. OTP Resend.
+    @GetMapping("/login/resend-otp")
+    public Object resendLoginOtp(@RequestParam String otpID) {
+        return userService.resendLoginOtp(otpID);
+    }
+
 
 
 
