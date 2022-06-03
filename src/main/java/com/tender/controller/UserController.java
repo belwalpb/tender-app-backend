@@ -2,16 +2,12 @@ package com.tender.controller;
 
 import com.tender.entity.User;
 import com.tender.exception.InvalidRequestException;
-import com.tender.model.LoginOtpRequest;
-import com.tender.model.LoginOtpResponse;
-import com.tender.model.LoginRequest;
-import com.tender.model.LoginResponse;
+import com.tender.model.*;
 import com.tender.service.UserService;
 import com.tender.validator.RequestValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.PostConstruct;
 import java.util.Objects;
 
 @RestController
@@ -37,7 +33,7 @@ public class UserController {
 
     // 1. OTP Send First Time.
     @PostMapping("/login/send-otp")
-    public LoginOtpResponse sendLoginOtp(@RequestBody LoginOtpRequest otpRequest) {
+    public LoginSignUpOtpResponse sendLoginOtp(@RequestBody LoginOtpRequest otpRequest) {
         // Validations
         if(Objects.isNull(otpRequest.getUsername())) {
             throw new InvalidRequestException("Username Must be present");
@@ -55,6 +51,11 @@ public class UserController {
     @GetMapping("/login/resend-otp")
     public Object resendLoginOtp(@RequestParam String otpID) {
         return userService.resendLoginOtp(otpID);
+    }
+
+    @PostMapping("/sign-up/init")
+    public LoginSignUpOtpResponse signUpInit(@RequestBody SignUpRequest req) {
+        return userService.signUpInit(req);
     }
 
 

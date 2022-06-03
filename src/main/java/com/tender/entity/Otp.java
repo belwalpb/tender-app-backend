@@ -35,6 +35,17 @@ public class Otp {
     @Column(name="is_valid")
     private Boolean isValid;
 
+    @Column(name="otp_type")
+    private Integer otpType;
+
+    public Integer getOtpType() {
+        return otpType;
+    }
+
+    public void setOtpType(Integer otpType) {
+        this.otpType = otpType;
+    }
+
     public String getOtpId() {
         return otpId;
     }

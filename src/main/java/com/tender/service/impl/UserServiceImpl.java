@@ -2,12 +2,12 @@ package com.tender.service.impl;
 
 import com.tender.constants.TenderConstants;
 import com.tender.entity.Otp;
+import com.tender.entity.TempUser;
 import com.tender.entity.User;
-import com.tender.model.LoginOtpRequest;
-import com.tender.model.LoginOtpResponse;
-import com.tender.model.LoginRequest;
-import com.tender.model.LoginResponse;
+import com.tender.exception.InvalidRequestException;
+import com.tender.model.*;
 import com.tender.repository.OtpRepository;
+import com.tender.repository.TempUsersRepository;
 import com.tender.repository.UserRepository;
 import com.tender.service.UserService;
 import com.tender.utils.EmailUtils;
@@ -32,6 +32,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     OtpRepository otpRepository;
+
+    @Autowired
+    TempUsersRepository tempUsersRepository;
 
     @Override
     public User addUser(User user) {
@@ -74,8 +77,8 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    public LoginOtpResponse sendLoginOtp(LoginOtpRequest request) {
-        LoginOtpResponse res=  new LoginOtpResponse();
+    public LoginSignUpOtpResponse sendLoginOtp(LoginOtpRequest request) {
+        LoginSignUpOtpResponse res=  new LoginSignUpOtpResponse();
         //1. Check if user is present or not.
         // select * from table where email = :username or mobile= :username
         Optional<User> userOptional = userRepository.findByEmailOrMobile(request.getUsername(),request.getUsername());
@@ -93,6 +96,7 @@ public class UserServiceImpl implements UserService {
             otpDbo.setValid(true);
             otpDbo.setResendAttempts(1);
             otpDbo.setVerificationAttempts(0);
+            otpDbo.setOtpType(1);
             otpRepository.saveAndFlush(otpDbo);
 
 
@@ -112,8 +116,8 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    public LoginOtpResponse resendLoginOtp(String otpID) {
-        LoginOtpResponse res=  new LoginOtpResponse();
+    public LoginSignUpOtpResponse resendLoginOtp(String otpID) {
+        LoginSignUpOtpResponse res=  new LoginSignUpOtpResponse();
         // Step-1 Try to find-out any otp data
         Optional<Otp> otpOptional = otpRepository.findById(otpID);
 
@@ -161,8 +165,8 @@ public class UserServiceImpl implements UserService {
      }
 
 
-     public LoginOtpResponse verifyLoginOtp(String otpID, String otp) {
-         LoginOtpResponse res=  new LoginOtpResponse();
+     public LoginSignUpOtpResponse verifyLoginOtp(String otpID, String otp) {
+         LoginSignUpOtpResponse res=  new LoginSignUpOtpResponse();
 
          Optional<Otp> otpOptional = otpRepository.findById(otpID);
 
@@ -213,16 +217,57 @@ public class UserServiceImpl implements UserService {
                  res.setMessage("Incorrect Otp.");
                  return res;
              }
-
-
-
-
          }
          else {
              res.setStatus(false);
              res.setMessage("No Otp Exists With Provided Otp ID");
              return res;
          }
+     }
+
+
+     public LoginSignUpOtpResponse signUpInit(SignUpRequest request) {
+        // 1. Check If that email or mobile already exist or not.
+         Optional<User> userOptional = userRepository.findByEmailOrMobile(request.getEmail(), request.getMobile());
+         if(userOptional.isPresent()) {
+             throw new InvalidRequestException("User Already Present");
+         }
+         //Otherwise Proceed...........
+         //1. Generate OTP
+         String otp = OtpUtils.get6DigitOtp();
+
+         //2. Save User Data to DB.
+         String newUserID = UUID.randomUUID().toString();
+         TempUser tempUser = new TempUser();
+         tempUser.setUserId(newUserID);
+         tempUser.setEmail(request.getEmail());
+         tempUser.setMobile(request.getMobile());
+         tempUser.setName(request.getName());
+         tempUser.setRole(request.getRole());
+         tempUser.setCreatedAt(LocalDateTime.now());
+         tempUser.setPassword(encoder.encode(request.getPassword()));
+         tempUsersRepository.saveAndFlush(tempUser);
+
+         //3. Save Otp Data into DB
+         Otp otpDbo = new Otp();
+         otpDbo.setOtp(otp);
+         otpDbo.setUserId(newUserID);
+         otpDbo.setOtpId(UUID.randomUUID().toString());
+         otpDbo.setCreatedAt(LocalDateTime.now());
+         otpDbo.setValid(true);
+         otpDbo.setResendAttempts(1);
+         otpDbo.setVerificationAttempts(0);
+         otpDbo.setOtpType(2);
+         otpRepository.saveAndFlush(otpDbo);
+
+         //4. Send Email to User.
+         EmailUtils.sendSignUpOtp(otp,tempUser);
+
+         LoginSignUpOtpResponse res = new LoginSignUpOtpResponse();
+         res.setOtpId(otpDbo.getOtpId());
+         res.setMessage("Otp Sent Successfully!");
+         res.setStatus(true);
+         return res;
      }
 
 }

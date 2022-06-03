@@ -1,10 +1,7 @@
 package com.tender.service;
 
 import com.tender.entity.User;
-import com.tender.model.LoginOtpRequest;
-import com.tender.model.LoginOtpResponse;
-import com.tender.model.LoginRequest;
-import com.tender.model.LoginResponse;
+import com.tender.model.*;
 
 
 public interface UserService {
@@ -13,11 +10,13 @@ public interface UserService {
 
      LoginResponse loginUser(LoginRequest request);
 
-     LoginOtpResponse sendLoginOtp(LoginOtpRequest request);
+     LoginSignUpOtpResponse sendLoginOtp(LoginOtpRequest request);
 
-     LoginOtpResponse resendLoginOtp(String otpID);
+     LoginSignUpOtpResponse resendLoginOtp(String otpID);
 
-     LoginOtpResponse verifyLoginOtp(String otpID, String otp);
+     LoginSignUpOtpResponse verifyLoginOtp(String otpID, String otp);
+
+     LoginSignUpOtpResponse signUpInit(SignUpRequest request);
 
 
 }

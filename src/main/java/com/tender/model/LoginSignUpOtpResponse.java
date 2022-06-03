@@ -1,6 +1,6 @@
 package com.tender.model;
 
-public class LoginOtpResponse {
+public class LoginSignUpOtpResponse {
 
     private String otpId;
     private Boolean status;
