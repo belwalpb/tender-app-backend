@@ -11,4 +11,6 @@ public class TenderConstants {
     public static final String EMAIL_ACCOUNT =  "***********@gmail.com";
     public static final String EMAIL_PASSWORD =  "**********";
     public static final long OTP_VALIDITY_TIME = 10 * 60;
+    public static final String ADMIN_ROLE = "ADMIN";
+    public static final String VENDOR_ROLE = "VENDOR";
 }
